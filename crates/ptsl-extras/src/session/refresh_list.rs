@@ -1,5 +1,6 @@
 use ptsl_protos::types::RefreshTargetAudioFilesResponseBody;
 
+/// Details describing a set of refreshed audio files.
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct RefreshList {
   success: i32,
