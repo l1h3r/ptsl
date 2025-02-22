@@ -2,6 +2,7 @@
 //!
 //! Internal and not intended for your eyes.
 
+#![allow(dead_code)]
 #![deny(missing_docs)]
 
 mod ast;

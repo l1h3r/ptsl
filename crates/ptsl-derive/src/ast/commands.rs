@@ -87,10 +87,8 @@ impl ToTokens for CommandList {
 pub struct Command {
   kind: CommandType,
   name: Ident,
-  #[allow(dead_code)]
   head: token::Paren,
   mode: CommandMode,
-  #[allow(dead_code)]
   tail: token::Brace,
   args: CommandArgs,
 }
@@ -295,7 +293,6 @@ impl Parse for CommandMode {
 
 struct CommandArg {
   name: Ident,
-  #[allow(dead_code)]
   skip: Token![:],
   kind: Type,
 }
