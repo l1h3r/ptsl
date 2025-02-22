@@ -53,21 +53,25 @@ impl Session {
   pub const COMPANY: &'static str = "PTSL";
 
   /// Returns a reference to the gRPC client.
+  #[inline]
   pub const fn client(&self) -> &Client {
     &self.client
   }
 
   /// Returns a mutable reference to the gRPC client.
+  #[inline]
   pub fn client_mut(&mut self) -> &mut Client {
     &mut self.client
   }
 
   /// Returns the current session status.
+  #[inline]
   pub const fn status(&self) -> Status {
     self.status
   }
 
   /// Returns the session directory.
+  #[inline]
   pub const fn ptdirs(&self) -> &PtDirs {
     &self.ptdirs
   }
@@ -77,6 +81,7 @@ impl Session {
   // ===========================================================================
 
   /// Returns the current version of the PTSL host.
+  #[inline]
   pub async fn version(&mut self) -> Result<i32> {
     self
       .client
@@ -113,7 +118,6 @@ impl Session {
   /// Open a previously closed Pro Tools session.
   pub async fn reopen(&mut self) -> Result<()> {
     self.status.assert_closed();
-
     self.client.open_session(self.ptdirs.to_string()).await?;
     self.status = Status::Active;
 
@@ -130,7 +134,6 @@ impl Session {
   }
 
   /// Send a `SaveSession` command to the PTSL server.
-  #[inline]
   pub async fn save(&mut self) -> Result<()> {
     self.status.assert_active();
     self.client.save_session().await
@@ -409,6 +412,8 @@ impl Session {
   /// Returns the session edit mode options.
   #[inline]
   pub async fn edit_mode_options(&mut self) -> Result<Option<EditModeOptions>> {
+    self.status.assert_active();
+
     self
       .client
       .get_edit_mode_options()
@@ -419,6 +424,7 @@ impl Session {
   /// Set the session edit mode options.
   #[inline]
   pub async fn set_edit_mode_options(&mut self) -> EditModeOptionsBuilder<'_> {
+    self.status.assert_active();
     EditModeOptionsBuilder::new(&mut self.client)
   }
 
@@ -428,6 +434,8 @@ impl Session {
     &mut self,
     time_scale: TrackOffsetOptions,
   ) -> Result<TimelineSelection> {
+    self.status.assert_active();
+
     self
       .client
       .get_timeline_selection(time_scale)
@@ -438,6 +446,7 @@ impl Session {
   /// Set the session timeline selection.
   #[inline]
   pub async fn set_timeline_selection(&mut self, value: TimelineSelection) -> Result<()> {
+    self.status.assert_active();
     value.into_request().send(&mut self.client).await
   }
 
@@ -448,66 +457,77 @@ impl Session {
   /// Send a `ConsolidateClip` command to the PTSL server.
   #[inline]
   pub async fn consolidate(&mut self) -> Result<()> {
+    self.status.assert_active();
     self.client.consolidate_clip().await
   }
 
   /// Send a `Clear` command to the PTSL server.
   #[inline]
   pub async fn clear(&mut self) -> Result<()> {
+    self.status.assert_active();
     self.client.clear().await
   }
 
   /// Send a `ClearSpecial` command to the PTSL server.
   #[inline]
   pub async fn clear_special(&mut self, options: AutomationDataOptions) -> Result<()> {
+    self.status.assert_active();
     self.client.clear_special(options).await
   }
 
   /// Send a `Copy` command to the PTSL server.
   #[inline]
   pub async fn copy(&mut self) -> Result<()> {
+    self.status.assert_active();
     self.client.copy().await
   }
 
   /// Send a `CopySpecial` command to the PTSL server.
   #[inline]
   pub async fn copy_special(&mut self, options: AutomationDataOptions) -> Result<()> {
+    self.status.assert_active();
     self.client.copy_special(options).await
   }
 
   /// Send a `Cut` command to the PTSL server.
   #[inline]
   pub async fn cut(&mut self) -> Result<()> {
+    self.status.assert_active();
     self.client.cut().await
   }
 
   /// Send a `CutSpecial` command to the PTSL server.
   #[inline]
   pub async fn cut_special(&mut self, options: AutomationDataOptions) -> Result<()> {
+    self.status.assert_active();
     self.client.cut_special(options).await
   }
 
   /// Send a `Paste` command to the PTSL server.
   #[inline]
   pub async fn paste(&mut self) -> Result<()> {
+    self.status.assert_active();
     self.client.paste().await
   }
 
   /// Send a `PasteSpecial` command to the PTSL server.
   #[inline]
   pub async fn paste_special(&mut self, options: PasteSpecialOptions) -> Result<()> {
+    self.status.assert_active();
     self.client.paste_special(options).await
   }
 
   /// Send a `TrimToSelection` command to the PTSL server.
   #[inline]
   pub async fn trim(&mut self) -> Result<()> {
+    self.status.assert_active();
     self.client.trim_to_selection().await
   }
 
   /// Send a `RefreshAllModifiedAudioFiles` command to the PTSL server.
   #[inline]
   pub async fn refresh_all(&mut self) -> Result<()> {
+    self.status.assert_active();
     self.client.refresh_all_modified_audio_files().await
   }
 
@@ -518,24 +538,28 @@ impl Session {
   /// Set a `PlayHalfSpeed` command to the PTSL server.
   #[inline]
   pub async fn play_half_speed(&mut self) -> Result<()> {
+    self.status.assert_active();
     self.client.play_half_speed().await
   }
 
   /// Set a `RecordHalfSpeed` command to the PTSL server.
   #[inline]
   pub async fn record_half_speed(&mut self) -> Result<()> {
+    self.status.assert_active();
     self.client.record_half_speed().await
   }
 
   /// Set a `TogglePlayState` command to the PTSL server.
   #[inline]
   pub async fn toggle_play_state(&mut self) -> Result<()> {
+    self.status.assert_active();
     self.client.toggle_play_state().await
   }
 
   /// Set a `ToggleRecordEnable` command to the PTSL server.
   #[inline]
   pub async fn toggle_record_enable(&mut self) -> Result<()> {
+    self.status.assert_active();
     self.client.toggle_record_enable().await
   }
 }
