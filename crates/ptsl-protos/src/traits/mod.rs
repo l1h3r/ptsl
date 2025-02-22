@@ -1,3 +1,5 @@
+//! Traits for working with protobuf types.
+
 mod decode;
 mod encode;
 
