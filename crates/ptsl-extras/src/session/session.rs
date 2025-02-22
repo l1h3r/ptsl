@@ -32,6 +32,7 @@ use crate::property::TimeCodeRate;
 use crate::property::TransportState;
 use crate::property::VideoRatePull;
 use crate::session::EditModeOptionsBuilder;
+use crate::session::RefreshList;
 use crate::session::SessionPath;
 use crate::session::Status;
 use crate::session::TimelineSelection;
@@ -524,11 +525,31 @@ impl Session {
     self.client.trim_to_selection().await
   }
 
-  /// Send a `RefreshAllModifiedAudioFiles` command to the PTSL server.
+  // ===========================================================================
+  // Audio File Commands
+  // ===========================================================================
+
+  /// Refresh all modified audio files.
   #[inline]
   pub async fn refresh_all(&mut self) -> Result<()> {
     self.status.assert_active();
     self.client.refresh_all_modified_audio_files().await
+  }
+
+  /// Refresh the given list of audio files.
+  #[inline]
+  pub async fn refresh<I, P>(&mut self, iter: I) -> Result<RefreshList>
+  where
+    I: IntoIterator<Item = P>,
+    P: AsRef<PtPath>,
+  {
+    self.status.assert_active();
+
+    self
+      .client
+      .refresh_target_audio_files(collect_paths(iter))
+      .await
+      .map(RefreshList::new)
   }
 
   // ===========================================================================
@@ -562,6 +583,21 @@ impl Session {
     self.status.assert_active();
     self.client.toggle_record_enable().await
   }
+}
+
+// =============================================================================
+// Misc. Utilities
+// =============================================================================
+
+fn collect_paths<I, P>(iter: I) -> Vec<String>
+where
+  I: IntoIterator<Item = P>,
+  P: AsRef<PtPath>,
+{
+  iter
+    .into_iter()
+    .map(|path| path.as_ref().to_string())
+    .collect()
 }
 
 fn export_base(kind: EsiOutputType, path: Option<String>) -> ExportSessionInfoAsTextRequestBody {
