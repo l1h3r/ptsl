@@ -40,6 +40,8 @@ fn main() {
     .build_server(false)
     .build_transport(true)
     .emit_rerun_if_changed(true)
+    .enum_attribute(".", "#[derive(::serde::Deserialize, ::serde::Serialize)]")
+    .message_attribute(".", "#[derive(::serde::Deserialize, ::serde::Serialize)]")
     // =========================================================================
     // Deprecated (2023.3)
     // =========================================================================
