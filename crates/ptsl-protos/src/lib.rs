@@ -2,6 +2,8 @@
 
 #![deny(missing_docs)]
 
+mod extension;
+
 pub mod error;
 pub mod result;
 pub mod traits;
