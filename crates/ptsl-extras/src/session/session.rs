@@ -3,7 +3,6 @@ use ptsl_client::error::Result;
 use ptsl_protos::bridge::CommandExt;
 use ptsl_protos::types::AutomationDataOptions;
 use ptsl_protos::types::DynamicPropertyType;
-use ptsl_protos::types::EditModeOptions;
 use ptsl_protos::types::EsiOutputType;
 use ptsl_protos::types::ExportSessionInfoAsTextRequestBody;
 use ptsl_protos::types::FadeHandlingType;
@@ -19,8 +18,6 @@ use crate::property::AudioFormat;
 use crate::property::AudioRatePull;
 use crate::property::BitDepth;
 use crate::property::Container;
-use crate::property::EditMode;
-use crate::property::EditTool;
 use crate::property::FeetFramesRate;
 use crate::property::Interleaved;
 use crate::property::Length;
@@ -33,12 +30,20 @@ use crate::property::TimeCodeRate;
 use crate::property::TransportState;
 use crate::property::VideoRatePull;
 use crate::session::DynamicProperties;
-use crate::session::EditModeOptionsBuilder;
 use crate::session::RefreshList;
 use crate::session::SessionPath;
 use crate::session::Status;
-use crate::session::TimelineSelection;
 use crate::utils::try_from_proto;
+
+feature! {
+  #![cfg(feature = "sdk-2023-9")]
+  use ptsl_protos::types::EditModeOptions;
+
+  use crate::property::EditMode;
+  use crate::property::EditTool;
+  use crate::session::EditModeOptionsBuilder;
+  use crate::session::TimelineSelection;
+}
 
 /// A high-level wrapper for Pro Tools sessions.
 #[derive(Debug)]
@@ -244,18 +249,21 @@ impl Session {
   }
 
   /// Get the edit mode property.
+  #[cfg(feature = "sdk-2023-9")]
   #[inline]
   pub async fn edit_mode(&mut self) -> Result<Container<EditMode>> {
     self.get_property().await
   }
 
   /// Set the edit mode property.
+  #[cfg(feature = "sdk-2023-9")]
   #[inline]
   pub async fn set_edit_mode(&mut self, value: EditMode) -> Result<()> {
     self.set_property(value).await
   }
 
   /// Get the edit mode options.
+  #[cfg(feature = "sdk-2023-9")]
   #[inline]
   pub async fn edit_mode_options(&mut self) -> Result<Option<EditModeOptions>> {
     self.status.assert_active();
@@ -268,6 +276,7 @@ impl Session {
   }
 
   /// Set the edit mode options.
+  #[cfg(feature = "sdk-2023-9")]
   #[inline]
   pub async fn set_edit_mode_options(&mut self) -> EditModeOptionsBuilder<'_> {
     self.status.assert_active();
@@ -275,12 +284,14 @@ impl Session {
   }
 
   /// Get the edit tool property.
+  #[cfg(feature = "sdk-2023-9")]
   #[inline]
   pub async fn edit_tool(&mut self) -> Result<Container<EditTool>> {
     self.get_property().await
   }
 
   /// Set the edit tool property.
+  #[cfg(feature = "sdk-2023-9")]
   #[inline]
   pub async fn set_edit_tool(&mut self, value: EditTool) -> Result<()> {
     self.set_property(value).await
@@ -473,6 +484,7 @@ impl Session {
   }
 
   /// Recall the specified zoom `preset`.
+  #[cfg(feature = "sdk-2023-9")]
   #[inline]
   pub async fn recall_zoom(&mut self, preset: ZoomPreset) -> Result<()> {
     self.status.assert_active();
@@ -535,6 +547,7 @@ impl Session {
   }
 
   /// Get the timeline selection.
+  #[cfg(feature = "sdk-2023-9")]
   #[inline]
   pub async fn timeline_selection(
     &mut self,
@@ -550,6 +563,7 @@ impl Session {
   }
 
   /// Set the timeline selection.
+  #[cfg(feature = "sdk-2023-9")]
   #[inline]
   pub async fn set_timeline_selection(&mut self, value: TimelineSelection) -> Result<()> {
     self.status.assert_active();
@@ -635,19 +649,22 @@ fn export_base(kind: EsiOutputType, path: Option<String>) -> ExportSessionInfoAs
   }
 }
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-#[repr(i32)]
-pub enum ZoomPreset {
-  Z1 = 1,
-  Z2 = 2,
-  Z3 = 3,
-  Z4 = 4,
-  Z5 = 5,
-}
+feature! {
+  #![cfg(feature = "sdk-2023-9")]
+  #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+  #[repr(i32)]
+  pub enum ZoomPreset {
+    Z1 = 1,
+    Z2 = 2,
+    Z3 = 3,
+    Z4 = 4,
+    Z5 = 5,
+  }
 
-impl ZoomPreset {
-  #[inline]
-  const fn into_i32(self) -> i32 {
-    self as i32
+  impl ZoomPreset {
+    #[inline]
+    const fn into_i32(self) -> i32 {
+      self as i32
+    }
   }
 }

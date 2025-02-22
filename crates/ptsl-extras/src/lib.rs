@@ -6,6 +6,9 @@
 #![allow(clippy::module_inception)]
 #![deny(missing_docs)]
 
+#[macro_use]
+extern crate ptsl_protos;
+
 mod utils;
 
 pub mod path;

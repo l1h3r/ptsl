@@ -7,5 +7,17 @@ readme = "README.md"
 
 [dependencies]
 bitflags = { version = "2.4", default-features = false }
-ptsl-client = { version = "=0.1", path = "../ptsl-client" }
-ptsl-protos = { version = "=0.1", path = "../ptsl-protos" }
+ptsl-client = { version = "=0.1", path = "../ptsl-client", default-features = false }
+ptsl-protos = { version = "=0.1", path = "../ptsl-protos", default-features = false }
+
+[features]
+default = ["sdk-2023-9"]
+
+# Enable support for SDK version 2023.3
+sdk-2023-3 = ["ptsl-client/sdk-2023-3", "ptsl-protos/sdk-2023-3"]
+
+# Enable support for SDK version 2023.6
+sdk-2023-6 = ["ptsl-client/sdk-2023-6", "ptsl-protos/sdk-2023-6"]
+
+# Enable support for SDK version 2023.9
+sdk-2023-9 = ["ptsl-client/sdk-2023-9", "ptsl-protos/sdk-2023-9"]

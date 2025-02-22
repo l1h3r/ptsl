@@ -8,8 +8,6 @@ pub use self::container::Container;
 pub use self::properties::AudioFormat;
 pub use self::properties::AudioRatePull;
 pub use self::properties::BitDepth;
-pub use self::properties::EditMode;
-pub use self::properties::EditTool;
 pub use self::properties::FeetFramesRate;
 pub use self::properties::Interleaved;
 pub use self::properties::Length;
@@ -25,3 +23,9 @@ pub use self::traits::PropertyGet;
 pub use self::traits::PropertySet;
 pub use self::traits::RemoteProperty;
 pub use self::traits::RemoteSettings;
+
+feature! {
+  #![cfg(feature = "sdk-2023-9")]
+  pub use self::properties::EditMode;
+  pub use self::properties::EditTool;
+}

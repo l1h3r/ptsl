@@ -44,7 +44,6 @@ use crate::types::TimeProperties;
 use crate::types::TrackListInvertibleFilter;
 use crate::types::TrackListType;
 use crate::types::TrackOffsetOptions;
-use crate::types::TrackType;
 use crate::types::TripleBool;
 
 feature! {
@@ -57,6 +56,7 @@ feature! {
   use crate::types::TimelineUpdateVideo;
   use crate::types::TrackFormat;
   use crate::types::TrackTimebase;
+  use crate::types::TrackType;
 }
 
 commands! {
@@ -202,7 +202,7 @@ commands! {
   command GetFileLocation(send, recv) {
     page_limit: i32,
     file_filters: Vec<FileLocationTypeFilter>,
-    // TODO: Should only be included with `feature = "sdk-2023-9"`
+    #[cfg(feature = "sdk-2023-9")]
     pagination_request: Option<PaginationRequest>,
   }
 
@@ -246,7 +246,7 @@ commands! {
     page_limit: i32,
     track_filter_list: Vec<TrackListInvertibleFilter>,
     is_filter_list_additive: bool,
-    // TODO: Should only be included with `feature = "sdk-2023-9"`
+    #[cfg(feature = "sdk-2023-9")]
     pagination_request: Option<PaginationRequest>,
   }
 
@@ -377,10 +377,9 @@ commands! {
 
   // ===========================================================================
   // 2023.9
-  //
-  // TODO: Should only be included with `feature = "sdk-2023-9"`
   // ===========================================================================
 
+  #[cfg(feature = "sdk-2023-9")]
   command CreateNewTracks(send, recv) {
     number_of_tracks: i32,
     track_name: String,
@@ -389,38 +388,48 @@ commands! {
     track_timebase: TrackTimebase,
   }
 
+  #[cfg(feature = "sdk-2023-9")]
   command SelectTracksByName(send, recv) {
     track_names: Vec<String>,
     selection_mode: SelectionMode,
     pagination_request: Option<PaginationRequest>,
   }
 
+  #[cfg(feature = "sdk-2023-9")]
   command GetEditMode(recv) {}
 
+  #[cfg(feature = "sdk-2023-9")]
   command SetEditMode(send) {
     edit_mode: EditMode,
   }
 
+  #[cfg(feature = "sdk-2023-9")]
   command GetEditTool(recv) {}
 
+  #[cfg(feature = "sdk-2023-9")]
   command SetEditTool(send) {
     edit_tool: EditTool,
   }
 
+  #[cfg(feature = "sdk-2023-9")]
   command RecallZoomPreset(send) {
     zoom_preset: i32,
   }
 
+  #[cfg(feature = "sdk-2023-9")]
   command GetEditModeOptions(recv) {}
 
+  #[cfg(feature = "sdk-2023-9")]
   command SetEditModeOptions(send) {
     edit_mode_options: Option<EditModeOptions>,
   }
 
+  #[cfg(feature = "sdk-2023-9")]
   command GetTimelineSelection(send, recv) {
     time_scale: TrackOffsetOptions,
   }
 
+  #[cfg(feature = "sdk-2023-9")]
   command SetTimelineSelection(send) {
     play_start_marker_time: String,
     in_time: String,

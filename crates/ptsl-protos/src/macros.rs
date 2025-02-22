@@ -1,3 +1,5 @@
+#[doc(hidden)]
+#[macro_export]
 macro_rules! feature {
   (
     #![cfg(feature = $feature:literal)]

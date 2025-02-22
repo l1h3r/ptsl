@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use ptsl_client::error::Result;
 use ptsl_protos::error::Error;
 use ptsl_protos::types::TripleBool;

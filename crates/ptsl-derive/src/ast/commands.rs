@@ -16,6 +16,7 @@ use syn::parse::ParseStream;
 use syn::parse_quote;
 use syn::punctuated::Punctuated;
 use syn::token;
+use syn::Attribute;
 use syn::Expr;
 use syn::Ident;
 use syn::Result;
@@ -23,6 +24,8 @@ use syn::Token;
 use syn::Type;
 
 use crate::ast::ExtType;
+use crate::attrs::ParseAttr;
+use crate::attrs::Once;
 
 type CommandArgs = Punctuated<CommandArg, Token![,]>;
 
@@ -85,6 +88,7 @@ impl ToTokens for CommandList {
 // =============================================================================
 
 pub struct Command {
+  attr: Attributes,
   kind: CommandType,
   name: Ident,
   head: token::Paren,
@@ -112,6 +116,10 @@ impl Command {
 
   fn param_inits(&self) -> Vec<Expr> {
     self.args.iter().map(|arg| arg.init()).collect()
+  }
+
+  fn param_features(&self) -> Vec<Option<Attribute>> {
+    self.args.iter().map(|arg| arg.attr.feature()).collect()
   }
 
   const fn is_command(&self) -> bool {
@@ -145,6 +153,7 @@ impl Parse for Command {
     let args: ParseBuffer<'_>;
 
     Ok(Self {
+      attr: Attributes::parse_outer(input)?,
       kind: input.parse()?,
       name: input.parse()?,
       head: parenthesized!(mode in input),
@@ -292,6 +301,7 @@ impl Parse for CommandMode {
 // =============================================================================
 
 struct CommandArg {
+  attr: Attributes,
   name: Ident,
   skip: Token![:],
   kind: Type,
@@ -306,9 +316,46 @@ impl CommandArg {
 impl Parse for CommandArg {
   fn parse(input: ParseStream<'_>) -> Result<Self> {
     Ok(Self {
+      attr: Attributes::parse_outer(input)?,
       name: input.parse()?,
       skip: input.parse()?,
       kind: input.parse()?,
+    })
+  }
+}
+
+// =============================================================================
+// Command Attributes
+// =============================================================================
+
+struct Attributes {
+  feature: Option<String>,
+}
+
+impl Attributes {
+  fn feature(&self) -> Option<Attribute> {
+    if let Some(ref feature) = self.feature {
+      Some(parse_quote!(#[cfg(feature = #feature)]))
+    } else {
+      None
+    }
+  }
+}
+
+impl ParseAttr for Attributes {
+  const NAME: &'static str = "cfg";
+  const DATA: &'static [&'static str] = &["feature"];
+
+  fn parse(attributes: &[Attribute]) -> Result<Self> {
+    let mut feature: Once<String> = Once::None;
+
+    Self::parse_inner(attributes, |item| match item.name() {
+      "feature" => feature.try_once(|| item.parse()),
+      _ => unreachable!(),
+    })?;
+
+    Ok(Self {
+      feature: feature.into_option(),
     })
   }
 }
@@ -327,12 +374,15 @@ impl ToTokens for Message<'_> {
     let ping: bool = self.0.mode.ping();
     let sync: bool = self.0.mode.sync();
     let docs: Documentation<'_> = Documentation::Message(name);
+    let feat: Option<Attribute> = self.0.attr.feature();
 
     tokens.extend(quote! {
+      #feat
       #[doc = #docs]
       #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
       pub struct #name;
 
+      #feat
       impl crate::traits::Message for #name {
         const TYPE: crate::types::CommandId = crate::types::CommandId::#name;
         const SEND_PINGS: bool = #ping;
@@ -360,14 +410,17 @@ impl ToTokens for Request<'_> {
     let name: &Ident = &self.0.name;
     let send: Type = self.0.send_type();
     let recv: Type = self.0.recv_type();
+    let feat: Option<Attribute> = self.0.attr.feature();
 
     let param_names: Vec<&Ident> = self.0.param_names();
     let param_kinds: Vec<&Type> = self.0.param_kinds();
+    let param_feats: Vec<Option<Attribute>> = self.0.param_features();
 
     let send_name: Option<Ident> = self.0.mode.send_name(name);
     let docs_init: Documentation<'_> = Documentation::Request(name, send_name);
 
     tokens.extend(quote! {
+      #feat
       impl #send {
         /// Use `client` to send the request to the PTSL server.
         #[inline]
@@ -379,11 +432,12 @@ impl ToTokens for Request<'_> {
         }
       }
 
+      #feat
       impl #name {
         #[doc = #docs_init]
         #[inline]
-        pub fn request(#(#param_names: #param_kinds),*) -> #send {
-          #send::new(#(#param_names),*)
+        pub fn request(#(#param_feats #param_names: #param_kinds),*) -> #send {
+          #send::new(#(#param_feats #param_names),*)
         }
       }
     });
@@ -440,10 +494,12 @@ impl ToTokens for Builder<'_> {
     };
 
     let name: &Ident = &self.0.name;
+    let feat: Option<Attribute> = self.0.attr.feature();
 
     let param_names: Vec<&Ident> = self.0.param_names();
     let param_kinds: Vec<&Type> = self.0.param_kinds();
     let param_inits: Vec<Expr> = self.0.param_inits();
+    let param_feats: Vec<Option<Attribute>> = self.0.param_features();
 
     let param_docs = self
       .0
@@ -452,22 +508,25 @@ impl ToTokens for Builder<'_> {
       .map(|arg| Documentation::Builder(&arg.name));
 
     tokens.extend(quote! {
+      #feat
       /// Convenience type for creating a new request.
       #[derive(Clone, Debug)]
       pub struct #builder_name {
-        #(#param_names: #param_kinds),*
+        #(#param_feats #param_names: #param_kinds),*
       }
 
+      #feat
       impl #builder_name {
         /// Create a new builder.
         #[inline]
         pub fn new() -> Self {
           Self {
-            #(#param_names: #param_inits),*
+            #(#param_feats #param_names: #param_inits),*
           }
         }
 
         #(
+          #param_feats
           #[doc = #param_docs]
           #[inline]
           pub fn #param_names<T: Into<#param_kinds>>(mut self, value: T) -> Self {
@@ -479,10 +538,11 @@ impl ToTokens for Builder<'_> {
         /// Consume the builder and return the constructed type.
         #[inline]
         pub fn build(self) -> #builder_type {
-          #builder_type::new(#(self.#param_names),*)
+          #builder_type::new(#(#param_feats self.#param_names),*)
         }
       }
 
+      #feat
       impl #name {
         /// Create a new builder.
         #[inline]
@@ -548,8 +608,9 @@ impl Extension<'_> {
     if self.0.mode.send() {
       let ident: &Ident = &self.0.name;
       let names: Vec<&Ident> = self.0.param_names();
+      let feats: Vec<Option<Attribute>> = self.0.param_features();
 
-      parse_quote!(#ident::request(#(#names),*))
+      parse_quote!(#ident::request(#(#feats #names),*))
     } else {
       parse_quote!(())
     }
@@ -567,8 +628,9 @@ impl Extension<'_> {
     if self.0.mode.send() {
       let param_names: Vec<&Ident> = self.0.param_names();
       let param_kinds: Vec<&Type> = self.0.param_kinds();
+      let param_feats: Vec<Option<Attribute>> = self.0.param_features();
 
-      Some(quote!(#(#param_names: #param_kinds),*))
+      Some(quote!(#(#param_feats #param_names: #param_kinds),*))
     } else {
       None
     }
@@ -589,7 +651,10 @@ impl ToTokens for Extension<'_> {
     let parameters: Option<TokenStream> = self.parameters();
     let doc_string: Documentation<'_> = Documentation::Extension(camel_name);
 
+    let feature: Option<Attribute> = self.0.attr.feature();
+
     tokens.extend(quote! {
+      #feature
       #[doc = #doc_string]
       async fn #snake_name(&mut self, #parameters) -> Result<Recv<#camel_name>, Self::Error> {
         let send: Send<#camel_name> = #new_sender;

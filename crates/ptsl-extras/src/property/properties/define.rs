@@ -49,59 +49,65 @@ define_ptsl_set!(BitDepth => set_session_bit_depth);
 // Edit Mode
 // =============================================================================
 
-define_property! {
-  pub enum EditMode: EditMode {
-    const Unknown = EmoUnknown;
-    const Shuffle = EmoShuffle;
-    const Slip = EmoSlip;
-    const Spot = EmoSpot;
-    const GridAbsolute = EmoGridAbsolute;
-    const GridRelative = EmoGridRelative;
-    const ShuffleSnapToGridAbsolute = EmoShuffleSnapToGridAbsolute;
-    const SlipSnapToGridAbsolute = EmoSlipSnapToGridAbsolute;
-    const SpotSnapToGridAbsolute = EmoSpotSnapToGridAbsolute;
-    const ShuffleSnapToGridRelative = EmoShuffleSnapToGridRelative;
-    const SlipSnapToGridRelative = EmoSlipSnapToGridRelative;
-    const SpotSnapToGridRelative = EmoSpotSnapToGridRelative;
+feature! {
+  #![cfg(feature = "sdk-2023-9")]
+  define_property! {
+    pub enum EditMode: EditMode {
+      const Unknown = EmoUnknown;
+      const Shuffle = EmoShuffle;
+      const Slip = EmoSlip;
+      const Spot = EmoSpot;
+      const GridAbsolute = EmoGridAbsolute;
+      const GridRelative = EmoGridRelative;
+      const ShuffleSnapToGridAbsolute = EmoShuffleSnapToGridAbsolute;
+      const SlipSnapToGridAbsolute = EmoSlipSnapToGridAbsolute;
+      const SpotSnapToGridAbsolute = EmoSpotSnapToGridAbsolute;
+      const ShuffleSnapToGridRelative = EmoShuffleSnapToGridRelative;
+      const SlipSnapToGridRelative = EmoSlipSnapToGridRelative;
+      const SpotSnapToGridRelative = EmoSpotSnapToGridRelative;
+    }
   }
-}
 
-define_settings!(EditMode => GetEditModeResponseBody);
-define_ptsl_get!(EditMode => get_edit_mode);
-define_ptsl_set!(EditMode => set_edit_mode);
+  define_settings!(EditMode => GetEditModeResponseBody);
+  define_ptsl_get!(EditMode => get_edit_mode);
+  define_ptsl_set!(EditMode => set_edit_mode);
+}
 
 // =============================================================================
 // Edit Tool
 // =============================================================================
 
-define_property! {
-  pub enum EditTool: EditTool {
-    const Unknown = EtUnknown;
-    const ZoomNormal = EtZoomNormal;
-    const ZoomSingle = EtZoomSingle;
-    const TrimStandard = EtTrimStandard;
-    const TrimTce = EtTrimTce;
-    const TrimScrub = EtTrimScrub;
-    const TrimLoop = EtTrimLoop;
-    const Selector = EtSelector;
-    const GrabberTime = EtGrabberTime;
-    const GrabberSeparation = EtGrabberSeparation;
-    const GrabberObject = EtGrabberObject;
-    const SmartTool = EtSmartTool;
-    const Scrubber = EtScrubber;
-    const PencilFreeHand = EtPencilFreeHand;
-    const PencilLine = EtPencilLine;
-    const PencilTriangle = EtPencilTriangle;
-    const PencilSquare = EtPencilSquare;
-    const PencilRandom = EtPencilRandom;
-    const PencilParabolic = EtPencilParabolic;
-    const PencilSCurve = EtPencilSCurve;
+feature! {
+  #![cfg(feature = "sdk-2023-9")]
+  define_property! {
+    pub enum EditTool: EditTool {
+      const Unknown = EtUnknown;
+      const ZoomNormal = EtZoomNormal;
+      const ZoomSingle = EtZoomSingle;
+      const TrimStandard = EtTrimStandard;
+      const TrimTce = EtTrimTce;
+      const TrimScrub = EtTrimScrub;
+      const TrimLoop = EtTrimLoop;
+      const Selector = EtSelector;
+      const GrabberTime = EtGrabberTime;
+      const GrabberSeparation = EtGrabberSeparation;
+      const GrabberObject = EtGrabberObject;
+      const SmartTool = EtSmartTool;
+      const Scrubber = EtScrubber;
+      const PencilFreeHand = EtPencilFreeHand;
+      const PencilLine = EtPencilLine;
+      const PencilTriangle = EtPencilTriangle;
+      const PencilSquare = EtPencilSquare;
+      const PencilRandom = EtPencilRandom;
+      const PencilParabolic = EtPencilParabolic;
+      const PencilSCurve = EtPencilSCurve;
+    }
   }
-}
 
-define_settings!(EditTool => GetEditToolResponseBody);
-define_ptsl_get!(EditTool => get_edit_tool);
-define_ptsl_set!(EditTool => set_edit_tool);
+  define_settings!(EditTool => GetEditToolResponseBody);
+  define_ptsl_get!(EditTool => get_edit_tool);
+  define_ptsl_set!(EditTool => set_edit_tool);
+}
 
 // =============================================================================
 // Session Feet Frames Rate
