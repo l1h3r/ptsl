@@ -12,3 +12,8 @@ members = [
   "crates/ptsl-future",
   "crates/ptsl-protos",
 ]
+
+[dependencies]
+ptsl-client = { version = "=0.1", path = "crates/ptsl-client" }
+ptsl-future = { version = "=0.1", path = "crates/ptsl-future" }
+ptsl-protos = { version = "=0.1", path = "crates/ptsl-protos" }
