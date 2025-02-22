@@ -2,6 +2,7 @@ use ptsl_client::client::Client;
 use ptsl_client::error::Result;
 use ptsl_protos::bridge::CommandExt;
 use ptsl_protos::types::AutomationDataOptions;
+use ptsl_protos::types::DynamicPropertyType;
 use ptsl_protos::types::EditModeOptions;
 use ptsl_protos::types::EsiOutputType;
 use ptsl_protos::types::ExportSessionInfoAsTextRequestBody;
@@ -31,6 +32,7 @@ use crate::property::StartTime;
 use crate::property::TimeCodeRate;
 use crate::property::TransportState;
 use crate::property::VideoRatePull;
+use crate::session::DynamicProperties;
 use crate::session::EditModeOptionsBuilder;
 use crate::session::RefreshList;
 use crate::session::SessionPath;
@@ -81,7 +83,7 @@ impl Session {
   // PTSL Core Commands
   // ===========================================================================
 
-  /// Returns the current version of the PTSL host.
+  /// Get the current version of the PTSL host.
   #[inline]
   pub async fn version(&mut self) -> Result<i32> {
     self
@@ -89,6 +91,18 @@ impl Session {
       .get_ptsl_version()
       .await
       .map(|recv| recv.version)
+  }
+
+  /// Get dynamic properties from the PTSL host.
+  pub async fn dynamic_properties(
+    &mut self,
+    property: DynamicPropertyType,
+  ) -> Result<DynamicProperties> {
+    self
+      .client
+      .get_dynamic_properties(property)
+      .await
+      .and_then(DynamicProperties::new)
   }
 
   // ===========================================================================
