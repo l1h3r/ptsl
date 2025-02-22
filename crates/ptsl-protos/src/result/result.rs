@@ -1,6 +1,7 @@
 use core::fmt::Debug;
 use core::fmt::Formatter;
 use core::fmt::Result as FmtResult;
+use ptsl_derive::delegate;
 
 use crate::error::Error;
 use crate::error::Result;
@@ -127,6 +128,24 @@ impl<T> CommandResult<T> {
       Self::Pass(inner) => inner.try_into_result(),
       Self::Fail(inner) => Err(inner.into_error()),
       Self::None(inner) => Err(inner.into_error()),
+    }
+  }
+
+  delegate! {
+    #[delegate(doc = "See [`TaskStatus::$function`][TaskStatus::$function]")]
+    #[delegate(map = false)]
+    to self.status() => {
+      pub const fn is_queued(&self) -> bool;
+      pub const fn is_pending(&self) -> bool;
+      pub const fn is_progress(&self) -> bool;
+      pub const fn is_completed(&self) -> bool;
+      pub const fn is_failed(&self) -> bool;
+      pub const fn is_waiting(&self) -> bool;
+      pub const fn is_completed_invalid(&self) -> bool;
+      pub const fn is_failed_invalid(&self) -> bool;
+      pub const fn is_completed_any(&self) -> bool;
+      pub const fn is_failed_any(&self) -> bool;
+      pub const fn is_done(&self) -> bool;
     }
   }
 }

@@ -14,5 +14,8 @@ tonic = { version = "0.10", default-features = false, features = ["codegen", "pr
 serde = { version = "1.0", default-features = false, features = ["derive", "std"] }
 serde_json = { version = "1.0", default-features = false, features = ["std"] }
 
+# Support
+ptsl-derive = { version = "=0.1", path = "../ptsl-derive" }
+
 [build-dependencies]
 tonic-build = { version = "0.10", default-features = false, features = ["prost"] }
