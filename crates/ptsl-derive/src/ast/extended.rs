@@ -41,7 +41,7 @@ impl<'a> ExtType<'a> {
       }
     }
 
-    panic!("Invalid Path");
+    parse_quote!(Default::default())
   }
 
   fn generic(&self) -> Option<&'a Type> {

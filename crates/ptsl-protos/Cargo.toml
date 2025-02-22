@@ -19,3 +19,15 @@ ptsl-derive = { version = "=0.1", path = "../ptsl-derive" }
 
 [build-dependencies]
 tonic-build = { version = "0.10", default-features = false, features = ["prost"] }
+
+[features]
+default = ["sdk-2023-9"]
+
+# Enable support for SDK version 2023.3
+sdk-2023-3 = []
+
+# Enable support for SDK version 2023.6
+sdk-2023-6 = []
+
+# Enable support for SDK version 2023.9
+sdk-2023-9 = []

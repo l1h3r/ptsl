@@ -1,10 +1,15 @@
 //! PTSL Protobuf Definitions.
 
+#![feature(async_fn_in_trait)]
 #![allow(clippy::module_inception)]
 #![deny(missing_docs)]
 
+#[macro_use]
+mod macros;
+
 mod extension;
 
+pub mod bridge;
 pub mod error;
 pub mod result;
 pub mod traits;
