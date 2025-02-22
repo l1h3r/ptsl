@@ -40,17 +40,6 @@ impl<T> Container<T> {
   pub fn into_inner(self) -> T {
     self.current
   }
-
-  #[inline]
-  pub(crate) fn map<U, F>(self, f: F) -> Container<U>
-  where
-    F: Fn(T) -> U,
-  {
-    Container {
-      current: f(self.current),
-      allowed: self.allowed.into_iter().map(f).collect(),
-    }
-  }
 }
 
 impl<T> Deref for Container<T> {

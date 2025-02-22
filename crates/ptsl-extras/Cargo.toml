@@ -6,5 +6,6 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 
 [dependencies]
+bitflags = { version = "2.4", default-features = false }
 ptsl-client = { version = "=0.1", path = "../ptsl-client" }
 ptsl-protos = { version = "=0.1", path = "../ptsl-protos" }
