@@ -1,6 +1,7 @@
-//! PTSL Protobuf Definitions
+//! PTSL Protobuf Definitions.
 
 pub mod error;
+pub mod traits;
 
 pub mod types {
   //! Compiled protobuf types.

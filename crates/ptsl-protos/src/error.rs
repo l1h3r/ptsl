@@ -26,7 +26,10 @@ impl Error {
 
 impl Display for Error {
   fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-    match self.kind {}
+    match self.kind {
+      ErrorKind::DecodeJson => write!(f, "[decode json]: {}", self.source),
+      ErrorKind::EncodeJson => write!(f, "[encode json]: {}", self.source),
+    }
   }
 }
 
@@ -38,4 +41,7 @@ impl StdError for Error {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub enum ErrorKind {}
+pub enum ErrorKind {
+  DecodeJson,
+  EncodeJson,
+}
