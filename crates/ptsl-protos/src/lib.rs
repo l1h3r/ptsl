@@ -3,6 +3,7 @@
 #![deny(missing_docs)]
 
 pub mod error;
+pub mod result;
 pub mod traits;
 
 pub mod types {

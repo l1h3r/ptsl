@@ -8,6 +8,10 @@ use std::error::Error as StdError;
 /// Alias for [`core::result::Result`].
 pub type Result<T, E = Error> = core::result::Result<T, E>;
 
+// =============================================================================
+// Error
+// =============================================================================
+
 /// Errors returned from protobuf-related operations.
 #[derive(Debug)]
 pub struct Error {
@@ -30,6 +34,7 @@ impl Display for Error {
     match self.kind {
       ErrorKind::DecodeJson => write!(f, "[decode json]: {}", self.source),
       ErrorKind::EncodeJson => write!(f, "[encode json]: {}", self.source),
+      ErrorKind::Protobuf => write!(f, "[protobuf]: {}", self.source),
     }
   }
 }
@@ -41,6 +46,17 @@ impl StdError for Error {
   }
 }
 
+impl From<prost::DecodeError> for Error {
+  #[inline]
+  fn from(other: prost::DecodeError) -> Self {
+    Self::new(ErrorKind::Protobuf, other)
+  }
+}
+
+// =============================================================================
+// Error Kind
+// =============================================================================
+
 /// A list of the general categories of library errors.
 #[derive(Clone, Copy, Debug)]
 pub enum ErrorKind {
@@ -48,4 +64,6 @@ pub enum ErrorKind {
   DecodeJson,
   /// JSON serialization error.
   EncodeJson,
+  /// Protobuf library error.
+  Protobuf,
 }
