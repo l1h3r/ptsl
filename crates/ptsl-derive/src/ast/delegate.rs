@@ -5,8 +5,16 @@ use syn::braced;
 use syn::parse::Parse;
 use syn::parse::ParseBuffer;
 use syn::parse::ParseStream;
+use syn::parse_quote;
+use syn::Attribute;
+use syn::Expr;
+use syn::FnArg;
+use syn::Ident;
+use syn::Pat;
 use syn::Result;
+use syn::Signature;
 use syn::Token;
+use syn::Visibility;
 
 use crate::attrs::Once;
 use crate::attrs::ParseAttr;
@@ -26,7 +34,7 @@ mod kw {
 /// A set of delegated functions.
 pub struct Delegate {
   attributes: Attributes,
-  expression: syn::Expr,
+  expression: Expr,
   functions: Vec<Function>,
 }
 
@@ -51,7 +59,7 @@ impl Parse for Delegate {
 
     let attributes: Attributes = Attributes::parse_outer(input)?;
     let _unused: kw::to = input.parse()?;
-    let expression: syn::Expr = input.parse()?;
+    let expression: Expr = input.parse()?;
     let _unused: Token![=>] = input.parse()?;
 
     braced!(functions in input);
@@ -79,12 +87,12 @@ impl ToTokens for Delegate {
 // =============================================================================
 
 struct Function {
-  vis: syn::Visibility,
-  sig: syn::Signature,
+  vis: Visibility,
+  sig: Signature,
 }
 
 impl Function {
-  const fn ident(&self) -> &syn::Ident {
+  const fn ident(&self) -> &Ident {
     &self.sig.ident
   }
 
@@ -92,37 +100,37 @@ impl Function {
     self.ident().to_string()
   }
 
-  fn params(&self) -> Vec<&syn::Ident> {
+  fn params(&self) -> Vec<&Ident> {
     self.sig.inputs.iter().filter_map(Self::param).collect()
   }
 
-  fn param(argument: &syn::FnArg) -> Option<&syn::Ident> {
+  fn param(argument: &FnArg) -> Option<&Ident> {
     // Ok to silently drop FnArg::Receiver
-    let syn::FnArg::Typed(ref typed) = argument else {
+    let FnArg::Typed(ref typed) = argument else {
       return None;
     };
 
     // Only Ident is supported
-    let syn::Pat::Ident(ident) = &*typed.pat else {
+    let Pat::Ident(ident) = &*typed.pat else {
       panic!("delegate! only supports method with identifier arguments");
     };
 
     Some(&ident.ident)
   }
 
-  fn docstr(&self, delegate: &Delegate) -> Option<syn::Attribute> {
+  fn docstr(&self, delegate: &Delegate) -> Option<Attribute> {
     delegate
       .attributes
       .doc
       .as_ref()
       .map(|template| template.replace("$function", &self.name()))
-      .map(|string| syn::parse_quote!(#[doc = #string]))
+      .map(|string| parse_quote!(#[doc = #string]))
   }
 
   fn method(&self, delegate: &Delegate) -> TokenStream {
-    let identifier: &syn::Ident = self.ident();
-    let expression: &syn::Expr = &delegate.expression;
-    let parameters: Vec<&syn::Ident> = self.params();
+    let identifier: &Ident = self.ident();
+    let expression: &Expr = &delegate.expression;
+    let parameters: Vec<&Ident> = self.params();
 
     if let Some(ref default) = delegate.attributes.map {
       quote! {
@@ -139,9 +147,9 @@ impl Function {
   }
 
   fn to_tokens(&self, delegate: &Delegate, tokens: &mut TokenStream) {
-    let visibility: &syn::Visibility = &self.vis;
-    let signature: &syn::Signature = &self.sig;
-    let docstr: Option<syn::Attribute> = self.docstr(delegate);
+    let visibility: &Visibility = &self.vis;
+    let signature: &Signature = &self.sig;
+    let docstr: Option<Attribute> = self.docstr(delegate);
     let method: TokenStream = self.method(delegate);
 
     tokens.extend(quote! {
@@ -169,16 +177,16 @@ impl Parse for Function {
 
 struct Attributes {
   doc: Option<String>,
-  map: Option<syn::Expr>,
+  map: Option<Expr>,
 }
 
 impl ParseAttr for Attributes {
   const NAME: &'static str = "delegate";
   const DATA: &'static [&'static str] = &["doc", "map"];
 
-  fn parse(attributes: &[syn::Attribute]) -> Result<Self> {
+  fn parse(attributes: &[Attribute]) -> Result<Self> {
     let mut doc: Once<String> = Once::None;
-    let mut map: Once<syn::Expr> = Once::None;
+    let mut map: Once<Expr> = Once::None;
 
     Self::parse_inner(attributes, |item| match item.name() {
       "doc" => doc.try_once(|| item.parse()),

@@ -76,7 +76,7 @@ impl ParseItem for String {
 
 impl ParseItem for bool {
   #[inline]
-  fn from_path(_meta: &syn::Path) -> Result<Self> {
+  fn from_path(_meta: &Path) -> Result<Self> {
     Ok(true)
   }
 
