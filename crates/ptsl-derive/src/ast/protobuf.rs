@@ -16,16 +16,14 @@ use syn::Expr;
 use syn::Field;
 use syn::Fields;
 use syn::FieldsNamed;
-use syn::GenericArgument;
 use syn::Ident;
-use syn::PathArguments;
-use syn::PathSegment;
 use syn::Result;
 use syn::Stmt;
 use syn::Token;
 use syn::Type;
 use syn::Variant;
 
+use crate::ast::ExtType;
 use crate::attrs::Once;
 use crate::attrs::ParseAttr;
 
@@ -725,51 +723,5 @@ fn visit_map(body: TokenStream) -> TokenStream {
     {
       #body
     }
-  }
-}
-
-// =============================================================================
-// Extended Type
-// =============================================================================
-
-struct ExtType<'a> {
-  inner: &'a Type,
-}
-
-impl<'a> ExtType<'a> {
-  const fn new(inner: &'a Type) -> Self {
-    Self { inner }
-  }
-
-  fn trailer(&self) -> &'a Type {
-    self.generic().unwrap_or(self.inner)
-  }
-
-  fn generic(&self) -> Option<&'a Type> {
-    let Some(segment) = self.segment() else {
-      return None;
-    };
-
-    if segment.ident == "Option" {
-      return None;
-    }
-
-    let PathArguments::AngleBracketed(ref arguments) = segment.arguments else {
-      return None;
-    };
-
-    let Some(GenericArgument::Type(generic)) = arguments.args.first() else {
-      return None;
-    };
-
-    Some(generic)
-  }
-
-  fn segment(&self) -> Option<&'a PathSegment> {
-    let Type::Path(path) = self.inner else {
-      return None;
-    };
-
-    path.path.segments.last()
   }
 }

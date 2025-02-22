@@ -27,3 +27,12 @@ pub fn delegate(input: TokenStream) -> TokenStream {
     Err(error) => error.into_compile_error().into(),
   }
 }
+
+/// Proc macro for implementing unified command API.
+#[proc_macro]
+pub fn commands(input: TokenStream) -> TokenStream {
+  match syn::parse::<ast::CommandList>(input) {
+    Ok(input) => input.to_token_stream().into(),
+    Err(error) => error.into_compile_error().into(),
+  }
+}
