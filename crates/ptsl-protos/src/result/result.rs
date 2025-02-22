@@ -2,6 +2,7 @@ use core::fmt::Debug;
 use core::fmt::Formatter;
 use core::fmt::Result as FmtResult;
 
+use crate::error::Error;
 use crate::error::Result;
 use crate::result::CommandError;
 use crate::result::CommandHeader;
@@ -17,7 +18,7 @@ use crate::types::TaskStatus;
 // =============================================================================
 
 /// Possible results from a gRPC command request.
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum CommandResult<T> {
   /// Success result.
   Pass(CommandPass<T>),
@@ -114,6 +115,20 @@ impl<T> CommandResult<T> {
       Self::None(_) => None,
     }
   }
+
+  /// Converts the command result into an [`Result<T>`].
+  ///
+  /// # Errors
+  ///
+  /// Returns [`Err`] if the result is empty, represents an error, or is [`None`].
+  #[inline]
+  pub fn into_result(self) -> Result<T> {
+    match self {
+      Self::Pass(inner) => inner.try_into_result(),
+      Self::Fail(inner) => Err(inner.into_error()),
+      Self::None(inner) => Err(inner.into_error()),
+    }
+  }
 }
 
 impl<T> Debug for CommandResult<T> {
@@ -131,7 +146,7 @@ impl<T> Debug for CommandResult<T> {
 // =============================================================================
 
 /// Command result that contains a success response.
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CommandPass<T> {
   header: CommandHeader,
   status: CommandStatus,
@@ -172,16 +187,30 @@ impl<T> CommandPass<T> {
     &self.status
   }
 
-  /// Returns a reference to the command result, or `None`.
+  /// Returns a reference to the command result, or [`None`].
   #[inline]
   pub const fn result(&self) -> Option<&T> {
     self.result.as_ref()
   }
 
-  /// Returns the command result, or `None`.
+  /// Returns the command result, or [`None`].
   #[inline]
   pub fn into_result(self) -> Option<T> {
     self.result
+  }
+
+  /// Returns the command result, or [`Err`].
+  ///
+  /// # Errors
+  ///
+  /// Returns [`Err`] if the underlying result is [`None`].
+  #[inline]
+  pub fn try_into_result(self) -> Result<T> {
+    let Some(result) = self.result else {
+      return Err(Error::incomplete(self.header.command()));
+    };
+
+    Ok(result)
   }
 }
 
@@ -199,7 +228,7 @@ impl<T> Debug for CommandPass<T> {
 // =============================================================================
 
 /// Command result that contains an error response.
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CommandFail {
   header: CommandHeader,
   status: CommandStatus,
@@ -237,10 +266,16 @@ impl CommandFail {
     &self.status
   }
 
-  /// Returns a reference to the command result, or `None`.
+  /// Returns a reference to the command result, or [`None`].
   #[inline]
   pub const fn result(&self) -> Option<&CommandError> {
     self.result.as_ref()
+  }
+
+  /// Converts the command result into an [`Error`].
+  #[inline]
+  pub fn into_error(self) -> Error {
+    Error::bad_response(self.header.command(), self.result)
   }
 }
 
@@ -249,7 +284,7 @@ impl CommandFail {
 // =============================================================================
 
 /// Command result that contains no response info.
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CommandNone {
   command: CommandId,
 }
@@ -264,5 +299,11 @@ impl CommandNone {
   #[inline]
   pub const fn command(&self) -> CommandId {
     self.command
+  }
+
+  /// Converts the command result into an [`Error`].
+  #[inline]
+  pub fn into_error(self) -> Error {
+    Error::bad_response(self.command, None)
   }
 }

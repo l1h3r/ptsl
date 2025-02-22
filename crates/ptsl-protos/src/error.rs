@@ -5,6 +5,9 @@ use core::fmt::Formatter;
 use core::fmt::Result as FmtResult;
 use std::error::Error as StdError;
 
+use crate::result::CommandError;
+use crate::types::CommandId;
+
 /// Alias for [`core::result::Result`].
 pub type Result<T, E = Error> = core::result::Result<T, E>;
 
@@ -27,6 +30,22 @@ impl Error {
       source: Box::new(source),
     }
   }
+
+  #[inline]
+  pub(crate) fn bad_response(command_id: CommandId, command_err: Option<CommandError>) -> Self {
+    Self::new(
+      ErrorKind::CommandBadResponse,
+      InvalidCommand::new(command_id, command_err),
+    )
+  }
+
+  #[inline]
+  pub(crate) fn incomplete(command_id: CommandId) -> Self {
+    Self::new(
+      ErrorKind::CommandIncomplete,
+      InvalidCommand::new(command_id, None),
+    )
+  }
 }
 
 impl Display for Error {
@@ -35,6 +54,8 @@ impl Display for Error {
       ErrorKind::DecodeJson => write!(f, "[decode json]: {}", self.source),
       ErrorKind::EncodeJson => write!(f, "[encode json]: {}", self.source),
       ErrorKind::Protobuf => write!(f, "[protobuf]: {}", self.source),
+      ErrorKind::CommandBadResponse => write!(f, "[bad response]: {}", self.source),
+      ErrorKind::CommandIncomplete => write!(f, "[incomplete]: {}", self.source),
     }
   }
 }
@@ -66,4 +87,46 @@ pub enum ErrorKind {
   EncodeJson,
   /// Protobuf library error.
   Protobuf,
+  /// Command result was empty or invalid.
+  CommandBadResponse,
+  /// Command completed with incomplete response.
+  CommandIncomplete,
 }
+
+// =============================================================================
+// Command Result Error
+// =============================================================================
+
+/// Error caused by invalid command result.
+#[derive(Debug)]
+pub struct InvalidCommand {
+  command_id: CommandId,
+  command_err: Option<CommandError>,
+}
+
+impl InvalidCommand {
+  #[inline]
+  pub(crate) const fn new(command_id: CommandId, command_err: Option<CommandError>) -> Self {
+    Self {
+      command_id,
+      command_err,
+    }
+  }
+}
+
+impl Display for InvalidCommand {
+  fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+    let name: &str = self.command_id.as_str_name();
+
+    if let Some(ref error) = self.command_err {
+      let kind: &str = error.kind().as_str_name();
+      let info: &str = error.message();
+
+      write!(f, "`{name}` - {kind} - {info}")
+    } else {
+      write!(f, "`{name}`")
+    }
+  }
+}
+
+impl StdError for InvalidCommand {}
