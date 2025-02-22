@@ -26,4 +26,15 @@ impl<T> Once<T> {
       Self::Some(inner) => Some(inner),
     }
   }
+
+  #[inline]
+  pub fn unwrap_or_default(self) -> T
+  where
+    T: Default,
+  {
+    match self {
+      Self::None => T::default(),
+      Self::Some(inner) => inner,
+    }
+  }
 }
