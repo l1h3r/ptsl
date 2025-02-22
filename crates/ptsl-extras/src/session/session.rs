@@ -3,13 +3,17 @@ use ptsl_client::error::Result;
 use ptsl_protos::bridge::CommandExt;
 use ptsl_protos::types::AutomationDataOptions;
 use ptsl_protos::types::EditModeOptions;
+use ptsl_protos::types::EsiOutputType;
+use ptsl_protos::types::ExportSessionInfoAsTextRequestBody;
+use ptsl_protos::types::FadeHandlingType;
 use ptsl_protos::types::PasteSpecialOptions;
 use ptsl_protos::types::SampleRate;
+use ptsl_protos::types::TextAsFileFormat;
+use ptsl_protos::types::TrackListType;
 use ptsl_protos::types::TrackOffsetOptions;
 
 use crate::path::PtDirs;
 use crate::path::PtPath;
-use crate::path::PtPathBuf;
 use crate::property::AudioFormat;
 use crate::property::AudioRatePull;
 use crate::property::BitDepth;
@@ -144,6 +148,29 @@ impl Session {
     let path: String = dirs.root().to_string();
 
     self.client.save_session_as(name, path).await
+  }
+
+  /// Export session info as a string.
+  pub async fn export_text(&mut self) -> Result<String> {
+    self.status.assert_active();
+
+    export_base(EsiOutputType::EsiString, None)
+      .send(&mut self.client)
+      .await
+      .map(|recv| recv.session_info)
+  }
+
+  /// Export session info to a file at the given `path`.
+  pub async fn export_file<P>(&mut self, path: &P) -> Result<()>
+  where
+    P: AsRef<PtPath> + ?Sized,
+  {
+    self.status.assert_active();
+
+    export_base(EsiOutputType::EsiFile, Some(path.as_ref().to_string()))
+      .send(&mut self.client)
+      .await
+      .map(|_| ())
   }
 
   // ===========================================================================
@@ -510,5 +537,23 @@ impl Session {
   #[inline]
   pub async fn toggle_record_enable(&mut self) -> Result<()> {
     self.client.toggle_record_enable().await
+  }
+}
+
+fn export_base(kind: EsiOutputType, path: Option<String>) -> ExportSessionInfoAsTextRequestBody {
+  ExportSessionInfoAsTextRequestBody {
+    include_file_list: true,
+    include_clip_list: true,
+    include_markers: true,
+    include_plugin_list: true,
+    include_track_edls: true,
+    show_sub_frames: true,
+    include_user_timestamps: true,
+    track_list_type: TrackListType::AllTracks.into(),
+    fade_handling_type: FadeHandlingType::ShowCrossfades.into(),
+    track_offset_options: TrackOffsetOptions::MinSecs.into(),
+    text_as_file_format: TextAsFileFormat::Utf8.into(),
+    output_type: kind.into(),
+    output_path: path.unwrap_or_default(),
   }
 }
