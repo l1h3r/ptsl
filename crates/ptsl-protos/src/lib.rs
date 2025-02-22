@@ -1,5 +1,7 @@
 //! PTSL Protobuf Definitions
 
+pub mod error;
+
 pub mod types {
   //! Compiled protobuf types.
   #![allow(deprecated)]
