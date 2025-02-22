@@ -1,5 +1,6 @@
 //! PTSL Protobuf Definitions.
 
+#![allow(clippy::module_inception)]
 #![deny(missing_docs)]
 
 mod extension;
