@@ -283,10 +283,11 @@ impl PtDirs {
     self.root_name().expect("Invalid PtPath Components")
   }
 
-  // #[inline]
-  // pub fn split(&self) -> (&str, &PtPath) {
-  //   self.0.split().expect("Invalid PtPath Components")
-  // }
+  /// Split the session path into (`name`, `directory`) parts.
+  #[inline]
+  pub fn split(&self) -> (&str, &PtPath) {
+    self.0.split().expect("Invalid PtPath Components")
+  }
 
   /// Returns a path pointing the a session file with the given `name`.
   #[inline]
