@@ -1,18 +1,16 @@
 use ptsl_client::client::Client;
 use ptsl_client::error::Result;
 use ptsl_protos::bridge::CommandExt;
-use ptsl_protos::error::Error;
-use ptsl_protos::types::FileLocation;
+use ptsl_protos::types::EditModeOptions;
 use ptsl_protos::types::SampleRate;
-use std::ops::Deref;
-use std::ops::DerefMut;
-use std::path::Path;
-use std::path::PathBuf;
+use ptsl_protos::types::TrackOffsetOptions;
 
 use crate::property::AudioFormat;
 use crate::property::AudioRatePull;
 use crate::property::BitDepth;
 use crate::property::Container;
+use crate::property::EditMode;
+use crate::property::EditTool;
 use crate::property::FeetFramesRate;
 use crate::property::Interleaved;
 use crate::property::Length;
@@ -23,7 +21,11 @@ use crate::property::RecordMode;
 use crate::property::StartTime;
 use crate::property::TimeCodeRate;
 use crate::property::VideoRatePull;
+use crate::session::EditModeOptionsBuilder;
+use crate::session::SessionPath;
 use crate::session::Status;
+use crate::session::TimelineSelection;
+use crate::utils::try_from_proto;
 
 /// A high-level wrapper for Pro Tools sessions.
 #[derive(Debug)]
@@ -60,7 +62,11 @@ impl Session {
 
   /// Returns the current version of the PTSL host.
   pub async fn version(&mut self) -> Result<i32> {
-    self.get_ptsl_version().await.map(|recv| recv.version)
+    self
+      .client
+      .get_ptsl_version()
+      .await
+      .map(|recv| recv.version)
   }
 
   // ===========================================================================
@@ -70,7 +76,11 @@ impl Session {
   /// Returns the session display name.
   pub async fn name(&mut self) -> Result<String> {
     self.status.assert_active();
-    self.get_session_name().await.map(|recv| recv.session_name)
+    self
+      .client
+      .get_session_name()
+      .await
+      .map(|recv| recv.session_name)
   }
 
   /// Returns the session file path.
@@ -78,6 +88,7 @@ impl Session {
     self.status.assert_active();
 
     self
+      .client
       .get_session_path()
       .await
       .map(|recv| recv.session_path.expect("Session Path"))
@@ -89,6 +100,7 @@ impl Session {
     self.status.assert_active();
 
     self
+      .client
       .get_session_sample_rate()
       .await
       .and_then(|recv| try_from_proto(recv.sample_rate))
@@ -99,6 +111,7 @@ impl Session {
     self.status.assert_active();
 
     self
+      .client
       .get_transport_armed()
       .await
       .map(|recv| recv.is_transport_armed)
@@ -116,6 +129,30 @@ impl Session {
   async fn set_property<T: PropertySet>(&mut self, value: T) -> Result<()> {
     self.status.assert_active();
     T::set(&mut self.client, value).await
+  }
+
+  /// Returns the edit mode session property.
+  #[inline]
+  pub async fn edit_mode(&mut self) -> Result<Container<EditMode>> {
+    self.get_property().await
+  }
+
+  /// Set the current value of the edit mode session property.
+  #[inline]
+  pub async fn set_edit_mode(&mut self, value: EditMode) -> Result<()> {
+    self.set_property(value).await
+  }
+
+  /// Returns the edit tool session property.
+  #[inline]
+  pub async fn edit_tool(&mut self) -> Result<Container<EditTool>> {
+    self.get_property().await
+  }
+
+  /// Set the current value of the edit tool session property.
+  #[inline]
+  pub async fn set_edit_tool(&mut self, value: EditTool) -> Result<()> {
+    self.set_property(value).await
   }
 
   /// Returns the playback mode session property.
@@ -253,61 +290,111 @@ impl Session {
   pub async fn set_video_rate_pull(&mut self, value: VideoRatePull) -> Result<()> {
     self.set_property(value).await
   }
-}
 
-impl Deref for Session {
-  type Target = Client;
+  // ===========================================================================
+  // Session Properties (Extra)
+  // ===========================================================================
 
+  /// Returns the session edit mode options.
   #[inline]
-  fn deref(&self) -> &Self::Target {
-    self.client()
-  }
-}
-
-impl DerefMut for Session {
-  #[inline]
-  fn deref_mut(&mut self) -> &mut Self::Target {
-    self.client_mut()
-  }
-}
-
-fn try_from_proto<T, U>(value: T) -> Result<U>
-where
-  U: TryFrom<T>,
-  U::Error: Into<Error>,
-{
-  U::try_from(value).map_err(Into::into).map_err(Into::into)
-}
-
-// =============================================================================
-// Session Path
-// =============================================================================
-
-/// Session file location.
-#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct SessionPath {
-  pub(crate) online: bool,
-  pub(crate) ospath: PathBuf,
-}
-
-impl SessionPath {
-  #[inline]
-  fn new(path: FileLocation) -> Self {
-    Self {
-      online: path.info.map_or(false, |info| info.is_online),
-      ospath: path.path.into(),
-    }
+  pub async fn edit_mode_options(&mut self) -> Result<Option<EditModeOptions>> {
+    self
+      .client
+      .get_edit_mode_options()
+      .await
+      .map(|recv| recv.edit_mode_options)
   }
 
-  /// Returns a reference to the OS path.
+  /// Set the session edit mode options.
   #[inline]
-  pub fn ospath(&self) -> &Path {
-    &self.ospath
+  pub async fn set_edit_mode_options(&mut self) -> EditModeOptionsBuilder<'_> {
+    EditModeOptionsBuilder::new(&mut self.client)
   }
 
-  /// Returns `true` if the session is stored online.
+  /// Returns the session timeline selection.
   #[inline]
-  pub const fn online(&self) -> bool {
-    self.online
+  pub async fn timeline_selection(
+    &mut self,
+    time_scale: TrackOffsetOptions,
+  ) -> Result<TimelineSelection> {
+    self
+      .client
+      .get_timeline_selection(time_scale)
+      .await
+      .map(TimelineSelection::from_response)
+  }
+
+  /// Set the session timeline selection.
+  #[inline]
+  pub async fn set_timeline_selection(&mut self, value: TimelineSelection) -> Result<()> {
+    value.into_request().send(&mut self.client).await
+  }
+
+  // ===========================================================================
+  // Basic Edit Commands
+  // ===========================================================================
+
+  /// Send a `Clear` command to the PTSL server.
+  #[inline]
+  pub async fn clear(&mut self) -> Result<()> {
+    self.client.clear().await
+  }
+
+  /// Send a `Copy` command to the PTSL server.
+  #[inline]
+  pub async fn copy(&mut self) -> Result<()> {
+    self.client.copy().await
+  }
+
+  /// Send a `Cut` command to the PTSL server.
+  #[inline]
+  pub async fn cut(&mut self) -> Result<()> {
+    self.client.cut().await
+  }
+
+  /// Send a `Paste` command to the PTSL server.
+  #[inline]
+  pub async fn paste(&mut self) -> Result<()> {
+    self.client.paste().await
+  }
+
+  /// Send a `TrimToSelection` command to the PTSL server.
+  #[inline]
+  pub async fn trim(&mut self) -> Result<()> {
+    self.client.trim_to_selection().await
+  }
+
+  /// Send a `RefreshAllModifiedAudioFiles` command to the PTSL server.
+  #[inline]
+  pub async fn refresh_all(&mut self) -> Result<()> {
+    self.client.refresh_all_modified_audio_files().await
+  }
+
+  // ===========================================================================
+  // Basic Playback Commands
+  // ===========================================================================
+
+  /// Set a `PlayHalfSpeed` command to the PTSL server.
+  #[inline]
+  pub async fn play_half_speed(&mut self) -> Result<()> {
+    self.client.play_half_speed().await
+  }
+
+  /// Set a `RecordHalfSpeed` command to the PTSL server.
+  #[inline]
+  pub async fn record_half_speed(&mut self) -> Result<()> {
+    self.client.record_half_speed().await
+  }
+
+  /// Set a `TogglePlayState` command to the PTSL server.
+  #[inline]
+  pub async fn toggle_play_state(&mut self) -> Result<()> {
+    self.client.toggle_play_state().await
+  }
+
+  /// Set a `ToggleRecordEnable` command to the PTSL server.
+  #[inline]
+  pub async fn toggle_record_enable(&mut self) -> Result<()> {
+    self.client.toggle_record_enable().await
   }
 }
