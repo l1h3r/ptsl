@@ -191,3 +191,10 @@ impl TimelineSelection {
     self
   }
 }
+
+impl Default for TimelineSelection {
+  #[inline]
+  fn default() -> Self {
+    Self::new()
+  }
+}

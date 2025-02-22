@@ -639,7 +639,7 @@ impl<'a> TryFrom<&'a Path> for &'a PtPath {
 
   #[inline]
   fn try_from(other: &'a Path) -> Result<Self, Self::Error> {
-    PtPath::from_path(other).ok_or_else(|| FromPathError(other.as_os_str()))
+    PtPath::from_path(other).ok_or(FromPathError(other.as_os_str()))
   }
 }
 
@@ -648,7 +648,7 @@ impl<'a> TryFrom<&'a OsStr> for &'a PtPath {
 
   #[inline]
   fn try_from(other: &'a OsStr) -> Result<Self, Self::Error> {
-    PtPath::from_path(Path::new(other)).ok_or_else(|| FromPathError(other))
+    PtPath::from_path(Path::new(other)).ok_or(FromPathError(other))
   }
 }
 
