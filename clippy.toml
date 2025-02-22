@@ -1,1 +1,2 @@
 # https://doc.rust-lang.org/clippy/lint_configuration.html
+doc-valid-idents = ["gRPC", ".."]

@@ -2,8 +2,8 @@
 //!
 //! # Issue Reference
 //!
-//!   https://github.com/hyperium/tonic/issues/959
-//!   https://github.com/hyperium/tonic/issues/1014
+//!   [issue#959](https://github.com/hyperium/tonic/issues/959)
+//!   [issue#1014](https://github.com/hyperium/tonic/issues/1014)
 
 mod channel;
 mod endpoint;

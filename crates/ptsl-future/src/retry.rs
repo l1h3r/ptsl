@@ -57,25 +57,25 @@ impl<C, F> Retry<C, F> {
     self
   }
 
-  /// Use [`Exponential`][Exponential] as the backoff strategy.
+  /// Use [`Exponential`] as the backoff strategy.
   #[inline]
   pub const fn exponential(self, delay: Duration) -> Self {
     self.strategy(Backoff::new_exponential(delay))
   }
 
-  /// Use [`Fixed`][Fixed] as the backoff strategy.
+  /// Use [`Fixed`] as the backoff strategy.
   #[inline]
   pub const fn fixed(self, delay: Duration) -> Self {
     self.strategy(Backoff::new_fixed(delay))
   }
 
-  /// Use [`Instant`][Instant] as the backoff strategy.
+  /// Use [`Instant`] as the backoff strategy.
   #[inline]
   pub const fn instant(self) -> Self {
     self.strategy(Backoff::new_instant())
   }
 
-  /// Use [`Linear`][Linear] as the backoff strategy.
+  /// Use [`Linear`] as the backoff strategy.
   #[inline]
   pub const fn linear(self, delay: Duration) -> Self {
     self.strategy(Backoff::new_linear(delay))
@@ -181,25 +181,25 @@ impl Config {
     self
   }
 
-  /// Use [`Exponential`][Exponential] as the backoff strategy.
+  /// Use [`Exponential`] as the backoff strategy.
   #[inline]
   pub const fn exponential(self, delay: Duration) -> Self {
     self.strategy(Backoff::new_exponential(delay))
   }
 
-  /// Use [`Fixed`][Fixed] as the backoff strategy.
+  /// Use [`Fixed`] as the backoff strategy.
   #[inline]
   pub const fn fixed(self, delay: Duration) -> Self {
     self.strategy(Backoff::new_fixed(delay))
   }
 
-  /// Use [`Instant`][Instant] as the backoff strategy.
+  /// Use [`Instant`] as the backoff strategy.
   #[inline]
   pub const fn instant(self) -> Self {
     self.strategy(Backoff::new_instant())
   }
 
-  /// Use [`Linear`][Linear] as the backoff strategy.
+  /// Use [`Linear`] as the backoff strategy.
   #[inline]
   pub const fn linear(self, delay: Duration) -> Self {
     self.strategy(Backoff::new_linear(delay))
@@ -235,25 +235,25 @@ pub enum Backoff {
 }
 
 impl Backoff {
-  /// Create a new [`Exponential`][Exponential] backoff strategy.
+  /// Create a new [`Exponential`] backoff strategy.
   #[inline]
   pub const fn new_exponential(delay: Duration) -> Self {
     Self::Exponential(Exponential::new(delay))
   }
 
-  /// Create a new [`Fixed`][Fixed] backoff strategy.
+  /// Create a new [`Fixed`] backoff strategy.
   #[inline]
   pub const fn new_fixed(delay: Duration) -> Self {
     Self::Fixed(Fixed::new(delay))
   }
 
-  /// Create a new [`Instant`][Instant] backoff strategy.
+  /// Create a new [`Instant`] backoff strategy.
   #[inline]
   pub const fn new_instant() -> Self {
     Self::Instant(Instant)
   }
 
-  /// Create a new [`Linear`][Linear] backoff strategy.
+  /// Create a new [`Linear`] backoff strategy.
   #[inline]
   pub const fn new_linear(delay: Duration) -> Self {
     Self::Linear(Linear::new(delay))

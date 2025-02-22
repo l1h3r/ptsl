@@ -19,7 +19,7 @@ pub trait Encode: private::Sealed + Serialize {
   ///
   /// # Errors
   ///
-  /// Returns `Err` if serialization fails.
+  /// Returns [`Err`] if serialization fails.
   #[inline]
   fn encode(&self) -> Result<String> {
     to_string(self).map_err(|error| Error::new(ErrorKind::EncodeJson, error))

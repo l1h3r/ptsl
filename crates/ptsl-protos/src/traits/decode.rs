@@ -19,7 +19,7 @@ pub trait Decode<'de>: private::Sealed + Deserialize<'de> {
   ///
   /// # Errors
   ///
-  /// Returns `Err` if deserialization fails.
+  /// Returns [`Err`] if deserialization fails.
   #[inline]
   fn decode(text: &'de str) -> Result<Self> {
     from_str(text).map_err(|error| Error::new(ErrorKind::DecodeJson, error))
