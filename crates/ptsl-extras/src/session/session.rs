@@ -7,6 +7,9 @@ use ptsl_protos::types::PasteSpecialOptions;
 use ptsl_protos::types::SampleRate;
 use ptsl_protos::types::TrackOffsetOptions;
 
+use crate::path::PtDirs;
+use crate::path::PtPath;
+use crate::path::PtPathBuf;
 use crate::property::AudioFormat;
 use crate::property::AudioRatePull;
 use crate::property::BitDepth;
@@ -35,6 +38,7 @@ use crate::utils::try_from_proto;
 pub struct Session {
   client: Client,
   status: Status,
+  ptdirs: PtDirs,
 }
 
 impl Session {
@@ -59,6 +63,11 @@ impl Session {
     self.status
   }
 
+  /// Returns the session directory.
+  pub const fn ptdirs(&self) -> &PtDirs {
+    &self.ptdirs
+  }
+
   // ===========================================================================
   // PTSL Core
   // ===========================================================================
@@ -73,12 +82,78 @@ impl Session {
   }
 
   // ===========================================================================
+  // Session File
+  // ===========================================================================
+
+  /// Open the session at the given `path`.
+  pub async fn open<P>(path: &P) -> Result<Self>
+  where
+    P: AsRef<PtPath> + ?Sized,
+  {
+    let mut client: Client = Client::new().await?;
+    let ptdirs: PtDirs = PtDirs::new(path.as_ref());
+
+    client
+      .register_connection(Self::APPNAME.into(), Self::COMPANY.into())
+      .await?;
+
+    client.open_session(ptdirs.to_string()).await?;
+
+    Ok(Self {
+      client,
+      ptdirs,
+      status: Status::Active,
+    })
+  }
+
+  /// Open a previously closed Pro Tools session.
+  pub async fn reopen(&mut self) -> Result<()> {
+    self.status.assert_closed();
+
+    self.client.open_session(self.ptdirs.to_string()).await?;
+    self.status = Status::Active;
+
+    Ok(())
+  }
+
+  /// Close the Pro Tools session.
+  pub async fn close(&mut self, save: bool) -> Result<()> {
+    self.status.assert_active();
+    self.client.close_session(save).await?;
+    self.status = Status::Closed;
+
+    Ok(())
+  }
+
+  /// Send a `SaveSession` command to the PTSL server.
+  #[inline]
+  pub async fn save(&mut self) -> Result<()> {
+    self.status.assert_active();
+    self.client.save_session().await
+  }
+
+  /// Send a `SaveSessionAs` command to the PTSL server.
+  pub async fn save_as<P>(&mut self, path: &P) -> Result<()>
+  where
+    P: AsRef<PtPath> + ?Sized,
+  {
+    self.status.assert_active();
+
+    let dirs: PtDirs = PtDirs::new(path.as_ref());
+    let name: String = dirs.name().to_owned();
+    let path: String = dirs.root().to_string();
+
+    self.client.save_session_as(name, path).await
+  }
+
+  // ===========================================================================
   // Session Properties (Static)
   // ===========================================================================
 
   /// Returns the session display name.
   pub async fn name(&mut self) -> Result<String> {
     self.status.assert_active();
+
     self
       .client
       .get_session_name()

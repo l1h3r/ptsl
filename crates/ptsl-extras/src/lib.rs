@@ -6,5 +6,6 @@
 
 mod utils;
 
+pub mod path;
 pub mod property;
 pub mod session;

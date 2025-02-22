@@ -14,4 +14,11 @@ impl Status {
       panic!("Session Not Active");
     };
   }
+
+  #[inline]
+  pub(crate) const fn assert_closed(self) {
+    let Self::Closed = self else {
+      panic!("Session Not Closed");
+    };
+  }
 }
