@@ -69,6 +69,11 @@ impl<T> CommandResult<T> {
     }
   }
 
+  #[doc(hidden)]
+  pub const fn empty(command: CommandId) -> Self {
+    Self::None(CommandNone::new(command))
+  }
+
   /// Returns `true` if the command was successful.
   #[inline]
   pub const fn is_pass(&self) -> bool {
