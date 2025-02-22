@@ -8,5 +8,6 @@ readme = "README.md"
 [workspace]
 members = [
   "crates/ptsl-derive",
+  "crates/ptsl-future",
   "crates/ptsl-protos",
 ]
