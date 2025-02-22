@@ -425,3 +425,30 @@ define_property! {
 define_settings!(TimeCodeRate => GetSessionTimeCodeRateResponseBody);
 define_ptsl_get!(TimeCodeRate => get_session_time_code_rate);
 define_ptsl_set!(TimeCodeRate => set_session_time_code_rate);
+
+// =============================================================================
+// Session Transport State
+// =============================================================================
+
+define_property! {
+  pub enum TransportState: TsTransportState {
+    const Playing = TsTransportPlaying;
+    const Stopped = TsTransportStopped;
+    const Recording = TsTransportRecording;
+    const PlayingHalfSpeed = TsTransportPlayingHalfSpeed;
+    const RecordingHalfSpeed = TsTransportRecordingHalfSpeed;
+    const FastForward = TsTransportFastForward;
+    const Rewind = TsTransportRewind;
+    const Scrub = TsTransportScrub;
+    const Shuttle = TsTransportShuttle;
+    const Primed = TsTransportPrimed;
+    const IsCueing = TsTransportIsCueing;
+    const IsCued = TsTransportIsCued;
+    const IsCuedForPreview = TsTransportIsCuedForPreview;
+    const IsStopping = TsTransportIsStopping;
+    const IsPreviewing = TsTransportIsPreviewing;
+  }
+}
+
+define_settings!(TransportState => GetTransportStateResponseBody);
+define_ptsl_get!(TransportState => get_transport_state);

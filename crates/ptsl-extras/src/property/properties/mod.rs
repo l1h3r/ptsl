@@ -17,4 +17,5 @@ pub use self::define::RecordMode;
 pub use self::define::RecordModeArmed;
 pub use self::define::StartTime;
 pub use self::define::TimeCodeRate;
+pub use self::define::TransportState;
 pub use self::define::VideoRatePull;

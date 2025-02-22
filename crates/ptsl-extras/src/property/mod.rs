@@ -19,6 +19,7 @@ pub use self::properties::RecordMode;
 pub use self::properties::RecordModeArmed;
 pub use self::properties::StartTime;
 pub use self::properties::TimeCodeRate;
+pub use self::properties::TransportState;
 pub use self::properties::VideoRatePull;
 pub use self::traits::PropertyGet;
 pub use self::traits::PropertySet;

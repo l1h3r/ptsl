@@ -1,7 +1,9 @@
 use ptsl_client::client::Client;
 use ptsl_client::error::Result;
 use ptsl_protos::bridge::CommandExt;
+use ptsl_protos::types::AutomationDataOptions;
 use ptsl_protos::types::EditModeOptions;
+use ptsl_protos::types::PasteSpecialOptions;
 use ptsl_protos::types::SampleRate;
 use ptsl_protos::types::TrackOffsetOptions;
 
@@ -20,6 +22,7 @@ use crate::property::PropertySet;
 use crate::property::RecordMode;
 use crate::property::StartTime;
 use crate::property::TimeCodeRate;
+use crate::property::TransportState;
 use crate::property::VideoRatePull;
 use crate::session::EditModeOptionsBuilder;
 use crate::session::SessionPath;
@@ -279,6 +282,12 @@ impl Session {
     self.set_property(value).await
   }
 
+  /// Returns the session transport state property.
+  #[inline]
+  pub async fn transport_state(&mut self) -> Result<Container<TransportState>> {
+    self.get_property().await
+  }
+
   /// Returns the video rate pull session property.
   #[inline]
   pub async fn video_rate_pull(&mut self) -> Result<Container<VideoRatePull>> {
@@ -334,10 +343,22 @@ impl Session {
   // Basic Edit Commands
   // ===========================================================================
 
+  /// Send a `ConsolidateClip` command to the PTSL server.
+  #[inline]
+  pub async fn consolidate(&mut self) -> Result<()> {
+    self.client.consolidate_clip().await
+  }
+
   /// Send a `Clear` command to the PTSL server.
   #[inline]
   pub async fn clear(&mut self) -> Result<()> {
     self.client.clear().await
+  }
+
+  /// Send a `ClearSpecial` command to the PTSL server.
+  #[inline]
+  pub async fn clear_special(&mut self, options: AutomationDataOptions) -> Result<()> {
+    self.client.clear_special(options).await
   }
 
   /// Send a `Copy` command to the PTSL server.
@@ -346,16 +367,34 @@ impl Session {
     self.client.copy().await
   }
 
+  /// Send a `CopySpecial` command to the PTSL server.
+  #[inline]
+  pub async fn copy_special(&mut self, options: AutomationDataOptions) -> Result<()> {
+    self.client.copy_special(options).await
+  }
+
   /// Send a `Cut` command to the PTSL server.
   #[inline]
   pub async fn cut(&mut self) -> Result<()> {
     self.client.cut().await
   }
 
+  /// Send a `CutSpecial` command to the PTSL server.
+  #[inline]
+  pub async fn cut_special(&mut self, options: AutomationDataOptions) -> Result<()> {
+    self.client.cut_special(options).await
+  }
+
   /// Send a `Paste` command to the PTSL server.
   #[inline]
   pub async fn paste(&mut self) -> Result<()> {
     self.client.paste().await
+  }
+
+  /// Send a `PasteSpecial` command to the PTSL server.
+  #[inline]
+  pub async fn paste_special(&mut self, options: PasteSpecialOptions) -> Result<()> {
+    self.client.paste_special(options).await
   }
 
   /// Send a `TrimToSelection` command to the PTSL server.
